@@ -113,6 +113,11 @@
                     <field name="type" />
                     <newline />
                     <field name="compare_method" />
+                    <field
+                        name="compare_kpi"
+                        domain="[('report_id', '=', report_id), ('id', '!=', id)]"
+                        options="{'no_create': True, 'no_open': True}"
+                    />
                     <field name="accumulation_method" />
                     <field name="style_id" />
                     <field name="style_expression" />

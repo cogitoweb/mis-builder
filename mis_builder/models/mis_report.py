@@ -22,7 +22,7 @@ from .aggregate import _avg, _max, _min, _sum
 from .expression_evaluator import ExpressionEvaluator
 from .kpimatrix import KpiMatrix
 from .mis_kpi_data import ACC_AVG, ACC_NONE, ACC_SUM
-from .mis_report_style import CMP_DIFF, CMP_NONE, CMP_PCT, TYPE_NUM, TYPE_PCT, TYPE_STR
+from .mis_report_style import CMP_DIFF, CMP_NONE, CMP_PCT, CMP_RAT, CMP_RATINV, TYPE_NUM, TYPE_PCT, TYPE_STR
 from .mis_safe_eval import DataError
 from .simple_array import SimpleArray, named_simple_array
 
@@ -115,12 +115,19 @@ class MisReportKpi(models.Model):
         [
             (CMP_DIFF, _("Difference")),
             (CMP_PCT, _("Percentage")),
+            (CMP_RAT, _("Ratio")),
+            (CMP_RATINV, _("Inverse ratio")),
             (CMP_NONE, _("None")),
         ],
         required=True,
         string="Comparison Method",
         default=CMP_PCT,
     )
+    compare_kpi = fields.Many2one(
+        "mis.report.kpi", string="Comparison KPI",
+        required=False, ondelete="cascade"
+    )
+
     accumulation_method = fields.Selection(
         [(ACC_SUM, _("Sum")), (ACC_AVG, _("Average")), (ACC_NONE, _("None"))],
         required=True,

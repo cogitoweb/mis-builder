@@ -19,6 +19,7 @@ _logger = logging.getLogger(__name__)
 SRC_ACTUALS = "actuals"
 SRC_ACTUALS_ALT = "actuals_alt"
 SRC_CMPCOL = "cmpcol"
+SRC_CMPROW = "cmprow"
 SRC_SUMCOL = "sumcol"
 
 MODE_NONE = "none"
@@ -236,6 +237,7 @@ class MisReportInstancePeriod(models.Model):
             (SRC_ACTUALS_ALT, "Actuals (alternative)"),
             (SRC_SUMCOL, "Sum columns"),
             (SRC_CMPCOL, "Compare columns"),
+            (SRC_CMPROW, "Compare rows"),
         ],
         default=SRC_ACTUALS,
         required=True,
@@ -347,7 +349,7 @@ class MisReportInstancePeriod(models.Model):
 
     @api.onchange("source")
     def _onchange_source(self):
-        if self.source in (SRC_SUMCOL, SRC_CMPCOL):
+        if self.source in (SRC_SUMCOL, SRC_CMPCOL, SRC_CMPROW):
             self.mode = MODE_NONE
 
     def _get_aml_model_name(self):
@@ -430,7 +432,7 @@ class MisReportInstancePeriod(models.Model):
                         _("A date filter is mandatory for this source " "in column %s.")
                         % rec.name
                     )
-            elif rec.source in (SRC_SUMCOL, SRC_CMPCOL):
+            elif rec.source in (SRC_SUMCOL, SRC_CMPCOL, SRC_CMPROW):
                 if rec.mode != MODE_NONE:
                     raise DateFilterForbidden(
                         _("No date filter is allowed for this source " "in column %s.")
@@ -457,6 +459,24 @@ class MisReportInstancePeriod(models.Model):
                 ):
                     raise ValidationError(
                         _("Columns to compare must belong to the same report " "in %s")
+                        % rec.name
+                    )
+
+            if rec.source == SRC_CMPROW:
+                if not rec.source_cmpcol_to_id:
+                    raise ValidationError(
+                        _("Please provide source columns to compare rows %s.") % rec.name
+                    )
+                if rec.source_cmpcol_to_id == rec:
+                    raise ValidationError(
+                        _("Column %s cannot be compared to itrec.") % rec.name
+                    )
+                if (
+                    rec.source_cmpcol_to_id.report_instance_id
+                    != rec.report_instance_id
+                ):
+                    raise ValidationError(
+                        _("Column to compare must belong to the same report " "in %s")
                         % rec.name
                     )
 
@@ -777,6 +797,14 @@ class MisReportInstance(models.Model):
             description,
         )
 
+    def _add_column_cmprow(self, aep, kpi_matrix, period, label, description):
+        kpi_matrix.declare_row_comparison(
+            period.id,
+            period.source_cmpcol_to_id.id,
+            label,
+            description,
+        )
+
     def _add_column(self, aep, kpi_matrix, period, label, description):
         if period.source == SRC_ACTUALS:
             return self._add_column_move_lines(
@@ -790,6 +818,8 @@ class MisReportInstance(models.Model):
             return self._add_column_sumcol(aep, kpi_matrix, period, label, description)
         elif period.source == SRC_CMPCOL:
             return self._add_column_cmpcol(aep, kpi_matrix, period, label, description)
+        elif period.source == SRC_CMPROW:
+            return self._add_column_cmprow(aep, kpi_matrix, period, label, description)
 
     def _compute_matrix(self):
         """Compute a report and return a KpiMatrix.
@@ -813,6 +843,7 @@ class MisReportInstance(models.Model):
                 date_to = self._format_date(period.date_to)
                 description = _("from %s to %s") % (date_from, date_to)
             self._add_column(aep, kpi_matrix, period, period.name, description)
+        kpi_matrix.compute_row_comparisons()
         kpi_matrix.compute_comparisons()
         kpi_matrix.compute_sums()
         return kpi_matrix
