@@ -275,8 +275,6 @@ class MisReportKpiStyle(models.Model):
                 elif compare_method == CMP_RAT:
                     delta = base_value / float(value) if base_value and round(base_value, style_props.dp or 0) != 0 else 0
 
-                _logger.info("value %s base_value %s result %s" % (value, base_value, delta))
-
                 delta_sign = ""
                 delta_style.update(dp=1)
                 delta_type = TYPE_PCT
