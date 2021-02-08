@@ -395,8 +395,6 @@ class KpiMatrix(object):
                 comparison_col._set_cell_tuple(row, comparison_cell_tuple)
 
     def compute_comparisons(self):
-
-    def compute_comparisons(self):
         """Compute comparisons.
 
         Invoke this after setting all values.
