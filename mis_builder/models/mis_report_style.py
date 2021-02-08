@@ -43,6 +43,8 @@ TYPE_STR = "str"
 
 CMP_DIFF = "diff"
 CMP_PCT = "pct"
+CMP_RAT = "ratio"
+CMP_RATINV = "invratio"
 CMP_NONE = "none"
 
 
@@ -225,6 +227,7 @@ class MisReportKpiStyle(models.Model):
         """
         delta = AccountingNone
         delta_r = ""
+        delta_sign = "+"
         delta_style = style_props.copy()
         delta_type = TYPE_NUM
         if isinstance(value, DataError) or isinstance(base_value, DataError):
@@ -260,8 +263,20 @@ class MisReportKpiStyle(models.Model):
                         delta_type = TYPE_PCT
                     else:
                         delta = AccountingNone
+            elif compare_method in (CMP_RAT, CMP_RATINV):
+
+                if compare_method == CMP_RATINV:
+                    delta = value / float(base_value) if base_value and round(base_value, style_props.dp or 0) != 0 else 0
+
+                elif compare_method == CMP_RAT:
+                    delta = base_value / float(value) if base_value and round(base_value, style_props.dp or 0) != 0 else 0
+
+                delta_sign = ""
+                delta_style.update(dp=1)
+                delta_type = TYPE_PCT
+
         if delta is not AccountingNone:
-            delta_r = self.render(lang, delta_style, delta_type, delta, sign="+")
+            delta_r = self.render(lang, delta_style, delta_type, delta, sign=delta_sign)
         return delta, delta_r, delta_style, delta_type
 
     @api.model
