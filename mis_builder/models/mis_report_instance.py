@@ -908,7 +908,7 @@ class MisReportInstance(models.Model):
                 "views": [[False, "list"], [False, "form"]],
                 "view_type": "list",
                 "view_mode": "list",
-                "target": "current",
+                "target": "new",
                 "context": {"active_test": False},
             }
         else:
