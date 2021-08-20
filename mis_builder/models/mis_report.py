@@ -705,6 +705,7 @@ class MisReport(models.Model):
                     if not drilldown_arg:
                         continue
                     drilldown_arg["period_id"] = col_key
+                    drilldown_arg["kpi_id"] = kpi.id
 
                 if name_error:
                     recompute_queue.append(kpi)
@@ -771,6 +772,7 @@ class MisReport(models.Model):
                         if not drilldown_arg:
                             continue
                         drilldown_arg["period_id"] = col_key
+                        drilldown_arg["kpi_id"] = kpi.id
                     kpi_matrix.set_values_detail_account(
                         kpi, col_key, account_id, vals, drilldown_args
                     )
