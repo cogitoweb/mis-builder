@@ -859,6 +859,7 @@ class MisReportInstance(models.Model):
     def drilldown(self, arg):
         self.ensure_one()
         period_id = arg.get("period_id")
+        target = arg.get("target")
         expr = arg.get("expr")
         account_id = arg.get("account_id")
         if period_id and expr and AEP.has_account_var(expr):
@@ -884,7 +885,7 @@ class MisReportInstance(models.Model):
                 "views": [[False, "list"], [False, "form"]],
                 "view_type": "list",
                 "view_mode": "list",
-                "target": "new",
+                "target": target,
                 "context": {"active_test": False},
             }
         else:

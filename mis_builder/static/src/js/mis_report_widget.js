@@ -310,7 +310,13 @@ odoo.define("mis_builder.widget", function (require) {
         drilldown: function (event) {
             var self = this;
             var context = self.get_context();
+            var drilldown_current = $(event.target).hasClass("drilldown_current");
             var drilldown = $(event.target).data("drilldown");
+            
+            if (drilldown_current){
+                drilldown = $(event.target).parent().data("drilldown");
+            }
+            
             self.MisReportInstance.call("drilldown", [self._instance_id(), drilldown], {
                 context: context,
             }).then(function (result) {

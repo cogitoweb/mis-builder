@@ -73,17 +73,27 @@
                                 class="mis_builder_amount"
                             >
                                 <t t-if="cell.drilldown_arg">
+                                    <t t-set="drilldown_arg" t-value="cell.drilldown_arg['target']='new'" />
+                                    
                                     <a
                                         href="javascript:void(0)"
                                         class="mis_builder_drilldown"
-                                        t-att-data-drilldown="JSON.stringify(cell.drilldown_arg)"
-                                    >
+                                        t-att-data-drilldown="JSON.stringify(cell.drilldown_arg)" >
+                                        
                                         <t t-esc="cell.val_r" />
                                     </a>
+
+                                    <t t-set="drilldown_arg" t-value="cell.drilldown_arg['target']='current'" />
+                                    
+                                    <a  href="javascript:void(0)" 
+                                        class="mis_builder_drilldown"
+                                        t-att-data-drilldown="JSON.stringify(cell.drilldown_arg)" >
+                                        
+                                        <i class="drilldown_current fa fa-expand"></i> 
+                                    </a>
+                                    
                                 </t>
-                                <t t-if="!cell.drilldown_arg">
-                                    <t t-esc="cell.val_r" />
-                                </t>
+                                
                             </td>
                         </tr>
                     </tbody>
