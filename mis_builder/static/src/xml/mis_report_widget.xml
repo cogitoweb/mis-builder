@@ -86,10 +86,10 @@
                                     <t t-set="drilldown_arg" t-value="cell.drilldown_arg['target']='current'" />
                                     
                                     <a  href="javascript:void(0)" 
-                                        class="mis_builder_drilldown"
+                                        class="mis_builder_drilldown hidden_icon"
                                         t-att-data-drilldown="JSON.stringify(cell.drilldown_arg)" >
                                         
-                                        <i class="drilldown_current fa fa-expand"></i> 
+                                        <i class="drilldown_current fa fa-level-up"></i> 
                                     </a>
                                     
                                 </t>

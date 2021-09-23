@@ -36,3 +36,11 @@
 .oe_mis_builder_buttons {
     margin: 0 !important;
 }
+
+.o_web_client .mis_builder_amount:hover .hidden_icon {
+    display: block;
+}
+
+.o_web_client .hidden_icon {
+    display: none;
+}
