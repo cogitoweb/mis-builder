@@ -882,6 +882,7 @@ class MisReportInstance(models.Model):
 
     def drilldown(self, arg):
         self.ensure_one()
+        target = arg.get("target")
         period_id = arg.get("period_id")
         expr = arg.get("expr")
         account_id = arg.get("account_id")
@@ -908,7 +909,7 @@ class MisReportInstance(models.Model):
                 "views": [[False, "list"], [False, "form"]],
                 "view_type": "list",
                 "view_mode": "list",
-                "target": "new",
+                "target": target,
                 "context": {"active_test": False},
             }
         else:
