@@ -93,7 +93,9 @@
                                     </a>
                                     
                                 </t>
-                                
+                                <t t-if="!cell.drilldown_arg">
+                                    <t t-esc="cell.val_r" />
+                                </t>
                             </td>
                         </tr>
                     </tbody>
