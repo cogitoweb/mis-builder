@@ -89,11 +89,14 @@
                                         class="mis_builder_drilldown hidden_icon"
                                         t-att-data-drilldown="JSON.stringify(cell.drilldown_arg)" 
                                     >
-
                                         <i class="drilldown_current fa fa-level-up"></i> 
                                     </a>
-
                                 </t>
+                                
+                                <t t-if="!cell.drilldown_arg">
+                                    <t t-esc="cell.val_r" />
+                                </t>
+                                
                             </td>
                         </tr>
                     </tbody>
