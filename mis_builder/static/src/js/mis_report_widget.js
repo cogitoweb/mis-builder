@@ -320,7 +320,6 @@ odoo.define("mis_builder.widget", function (require) {
             self.MisReportInstance.call("drilldown", [self._instance_id(), drilldown], {
                 context: context,
             }).then(function (result) {
-                result.limit = 50000;
                 self.do_action(result);
             });
         },
