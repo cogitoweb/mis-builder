@@ -7,6 +7,10 @@
                 type="text/javascript"
                 src="/mis_builder/static/src/js/mis_report_widget.js"
             />
+            <script
+                type="text/javascript"
+                src="/mis_builder/static/src/js/list_view.js"
+            />
         </xpath>
     </template>
     <record model="ir.ui.view" id="mis_report_instance_result_view_form">
