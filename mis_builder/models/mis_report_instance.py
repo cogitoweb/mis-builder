@@ -445,8 +445,6 @@ class MisReportInstancePeriod(models.Model):
         for rec in self:
 
             # check disable constr
-            _logger.info("check disable_constraints")
-            _logger.info("disable_constraints %s" % self.env.context.get('disable_constraints'))
             if self.env.context.get('disable_constraints'):
                 continue
 
@@ -643,7 +641,7 @@ class MisReportInstance(models.Model):
         return reports.unlink()
 
     def copy(self, default=None):
-        _logger.info("set disable_constraints")
+        # disable constr in copy
         self.with_context(disable_constraints=True).ensure_one()
 
         default = dict(default or {})
