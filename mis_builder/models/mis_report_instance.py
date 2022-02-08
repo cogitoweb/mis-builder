@@ -440,13 +440,6 @@ class MisReportInstancePeriod(models.Model):
                         % rec.name
                     )
 
-    # override to temp disable constraints
-    def copy(self, default=None):
-        _logger.info("set disable_constraints")
-        self.with_context(disable_constraints=True).ensure_one()
-        default = dict(default or {})
-        return super(MisReportInstancePeriod, self).copy(default)
-
     @api.constrains("source", "source_cmpcol_from_id", "source_cmpcol_to_id")
     def _check_source_cmpcol(self):
         for rec in self:
@@ -650,7 +643,9 @@ class MisReportInstance(models.Model):
         return reports.unlink()
 
     def copy(self, default=None):
-        self.ensure_one()
+        _logger.info("set disable_constraints")
+        self.with_context(disable_constraints=True).ensure_one()
+
         default = dict(default or {})
         default["name"] = _("%s (copy)") % self.name
         return super(MisReportInstance, self).copy(default)
