@@ -455,6 +455,11 @@ class MisReportInstancePeriod(models.Model):
     @api.constrains("source", "source_cmpcol_from_id", "source_cmpcol_to_id")
     def _check_source_cmpcol(self):
         for rec in self:
+
+            # check disable constr
+            if self.env.context.get('disable_constraints'):
+                continue
+
             if rec.source == SRC_CMPCOL:
                 if not rec.source_cmpcol_from_id or not rec.source_cmpcol_to_id:
                     raise ValidationError(
@@ -661,11 +666,11 @@ class MisReportInstance(models.Model):
 
     def copy(self, default=None):
         # disable constr in copy
-        self.with_context(disable_constraints=True).ensure_one()
+        self.ensure_one()
 
         default = dict(default or {})
         default["name"] = _("%s (copy)") % self.name
-        return super(MisReportInstance, self).copy(default)
+        return super(MisReportInstance, self.with_context(disable_constraints=True)).copy(default)
 
     def _format_date(self, date):
         # format date following user language
