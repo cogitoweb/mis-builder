@@ -660,7 +660,9 @@ class MisReportInstance(models.Model):
         return reports.unlink()
 
     def copy(self, default=None):
-        self.ensure_one()
+        # disable constr in copy
+        self.with_context(disable_constraints=True).ensure_one()
+
         default = dict(default or {})
         default["name"] = _("%s (copy)") % self.name
         return super(MisReportInstance, self).copy(default)
