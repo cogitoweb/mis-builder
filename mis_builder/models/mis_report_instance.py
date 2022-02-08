@@ -442,17 +442,18 @@ class MisReportInstancePeriod(models.Model):
 
     # override to temp disable constraints
     def copy(self, default=None):
-        self.ensure_one()
+        self.with_context(disable_constraints=True).ensure_one()
         default = dict(default or {})
-        return super(MisReportInstancePeriod, self.with_context(disable_constraints=True)).copy(default)
+        return super(MisReportInstancePeriod, self).copy(default)
 
     @api.constrains("source", "source_cmpcol_from_id", "source_cmpcol_to_id")
     def _check_source_cmpcol(self):
         for rec in self:
 
             # check disable constr
+            _logger.info("check disable_constraints")
             if self.env.context.get('disable_constraints'):
-                continue 
+                continue
 
             if rec.source == SRC_CMPCOL:
                 if not rec.source_cmpcol_from_id or not rec.source_cmpcol_to_id:
