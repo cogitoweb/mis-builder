@@ -642,7 +642,7 @@ class MisReportInstance(models.Model):
 
     def copy(self, default=None):
         # disable constr in copy
-        self.with_context(disable_constraints=True).ensure_one()
+        self.ensure_one()
 
         default = dict(default or {})
         default["name"] = _("%s (copy)") % self.name
