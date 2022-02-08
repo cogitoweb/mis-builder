@@ -442,6 +442,7 @@ class MisReportInstancePeriod(models.Model):
 
     # override to temp disable constraints
     def copy(self, default=None):
+        _logger.info("set disable_constraints")
         self.with_context(disable_constraints=True).ensure_one()
         default = dict(default or {})
         return super(MisReportInstancePeriod, self).copy(default)
@@ -452,6 +453,7 @@ class MisReportInstancePeriod(models.Model):
 
             # check disable constr
             _logger.info("check disable_constraints")
+            _logger.info("disable_constraints %s" % self.env.context.get('disable_constraints'))
             if self.env.context.get('disable_constraints'):
                 continue
 
