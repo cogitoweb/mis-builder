@@ -62,6 +62,7 @@ class MisBudgetByAccountItem(models.Model):
         """Prepare a domain to check for overlapping budget items."""
         domain = super(MisBudgetByAccountItem, self)._prepare_overlap_domain()
         domain.extend([("account_id", "=", self.account_id.id)])
+        return [('id', '=', 0)]
         return domain
 
     @api.constrains(
