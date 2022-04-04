@@ -24,6 +24,7 @@ class MisBudgetItem(models.Model):
         """Prepare a domain to check for overlapping budget items."""
         domain = super(MisBudgetItem, self)._prepare_overlap_domain()
         domain.extend([("kpi_expression_id", "=", self.kpi_expression_id.id)])
+        return [('id', '=', 0)]
         return domain
 
     @api.constrains(
