@@ -41,11 +41,21 @@ odoo.define("mis_builder.widget", function (require) {
             self.analytic_tag_ids_domain = []; // TODO unused for now
             self.analytic_tag_ids_label = _t("Analytic Tags Filter");
             self.analytic_tag_ids_m2m = undefined; // Field widget
+
+            self.partner_id_domain = []; // TODO unused for now
+            self.partner_id_label = _t("Partner Filter");
+            self.partner_id_m2o = undefined; // Field widget
+            self.account_id_domain = []; // TODO unused for now
+            self.account_id_label = _t("Account Filter");
+            self.account_id_m2o = undefined; // Field widget
+
             self.mis_report_data = undefined;
             self.show_settings = false;
             self.has_group_analytic_accounting = false;
             self.has_group_analytic_tags = false;
             self.hide_analytic_filters = false;
+            self.hide_partner_filter = false;
+            self.hide_account_filter = false;
         },
 
         _getFilterValue: function (name) {
@@ -139,11 +149,13 @@ odoo.define("mis_builder.widget", function (require) {
                 ._rpc({
                     model: "mis.report.instance",
                     method: "read",
-                    args: [self._instanceId(), ["hide_analytic_filters"]],
+                    args: [self._instanceId(), ["hide_analytic_filters", "hide_partner_filter", "hide_account_filter"]],
                     context: context,
                 })
                 .then(function (result) {
                     self.hide_analytic_filters = result[0].hide_analytic_filters;
+                    self.hide_partner_filter = result[0].hide_partner_filter;
+                    self.hide_account_filter = result[0].hide_account_filter;
                 });
 
             return $.when(
@@ -160,6 +172,8 @@ odoo.define("mis_builder.widget", function (require) {
             var self = this;
             self._super.apply(self, arguments);
             self._addAnalyticFilters();
+            self._addPartnerFilter();
+            self._addAccountFilter();
         },
 
         /**
@@ -193,6 +207,34 @@ odoo.define("mis_builder.widget", function (require) {
                     value: self._getFilterValue("analytic_tag_ids"),
                 });
             }
+            return fields;
+        },
+
+        _getPartnerField: function () {
+            var self = this;
+            var fields = [];
+
+            fields.push({
+                relation: "res.partner",
+                type: "many2one",
+                name: "filter_partner_id",
+                value: self._getFilterValue("partner_id"),
+            });
+
+            return fields;
+        },
+
+        _getAccountField: function () {
+            var self = this;
+            var fields = [];
+
+            fields.push({
+                relation: "account.account",
+                type: "many2one",
+                name: "filter_account_id",
+                value: self._getFilterValue("account_id"),
+            });
+
             return fields;
         },
 
@@ -285,6 +327,60 @@ odoo.define("mis_builder.widget", function (require) {
             }
         },
 
+        _makePartnerFilterFieldWidget: function (record) {
+            var self = this;
+
+            self.partner_id_m2o = new relational_fields.FieldMany2One(
+                self,
+                "filter_partner_id",
+                record,
+                {
+                    mode: "edit",
+                    attrs: {
+                        placeholder: self.partner_id_label,
+                        options: {
+                            no_create: "True",
+                            no_open: "True",
+                        },
+                    },
+                }
+            );
+            self._registerWidget(
+                record.id,
+                self.partner_id_m2o.name,
+                self.partner_id_m2o
+            );
+            self.partner_id_m2o.appendTo(self.getMisBuilderFilterBox());
+
+        },
+
+        _makeAccountFilterFieldWidget: function (record) {
+            var self = this;
+
+            self.account_id_m2o = new relational_fields.FieldMany2One(
+                self,
+                "filter_account_id",
+                record,
+                {
+                    mode: "edit",
+                    attrs: {
+                        placeholder: self.account_id_label,
+                        options: {
+                            no_create: "True",
+                            no_open: "True",
+                        },
+                    },
+                }
+            );
+            self._registerWidget(
+                record.id,
+                self.account_id_m2o.name,
+                self.account_id_m2o
+            );
+            self.account_id_m2o.appendTo(self.getMisBuilderFilterBox());
+
+        },
+
         /**
          * Hack to work around Odoo not fetching display name for
          * x2many used with makeRecord.
@@ -332,6 +428,48 @@ odoo.define("mis_builder.widget", function (require) {
                 });
         },
 
+        _addPartnerFilter: function () {
+            var self = this;
+            if (self.hide_partner_filter) {
+                return;
+            }
+            self.model
+                .makeRecord(
+                    "dummy.model",
+                    self._getPartnerField(),
+                    self._getFilterFieldInfo()
+                )
+                .then(function (recordId) {
+                    var record = self.model.get(recordId);
+                    var defs = [];
+                    $.when.apply($, defs).then(function () {
+                        record = self.model.get(record.id);
+                        self._makePartnerFilterFieldWidget(record);
+                    });
+                });
+        },
+
+        _addAccountFilter: function () {
+            var self = this;
+            if (self.hide_partner_filter) {
+                return;
+            }
+            self.model
+                .makeRecord(
+                    "dummy.model",
+                    self._getAccountField(),
+                    self._getFilterFieldInfo()
+                )
+                .then(function (recordId) {
+                    var record = self.model.get(recordId);
+                    var defs = [];
+                    $.when.apply($, defs).then(function () {
+                        record = self.model.get(record.id);
+                        self._makeAccountFilterFieldWidget(record);
+                    });
+                });
+        },
+
         _confirmChange: function () {
             var self = this;
             var result = StandaloneFieldManagerMixin._confirmChange.apply(
@@ -375,6 +513,30 @@ odoo.define("mis_builder.widget", function (require) {
                     );
                 } else {
                     self._setFilterValue("analytic_tag_ids", undefined);
+                }
+            }
+
+            if (self.partner_id_m2o !== undefined) {
+                if (self.partner_id_m2o.value) {
+                    self._setFilterValue(
+                        "partner_id",
+                        self.partner_id_m2o.value.res_id,
+                        "="
+                    );
+                } else {
+                    self._setFilterValue("partner_id", undefined);
+                }
+            }
+
+            if (self.account_id_m2o !== undefined) {
+                if (self.account_id_m2o.value) {
+                    self._setFilterValue(
+                        "account_id",
+                        self.account_id_m2o.value.res_id,
+                        "="
+                    );
+                } else {
+                    self._setFilterValue("account_id", undefined);
                 }
             }
 
