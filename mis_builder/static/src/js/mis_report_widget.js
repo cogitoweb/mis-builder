@@ -26,6 +26,8 @@ odoo.define("mis_builder.widget", function (require) {
          * - has_group_analytic_accounting
          * - hide_analytic_filters: a flag that controls the visibility of the
          *   analytic filters box
+         * - hide_partner_filters: a flag that controls the visibility of the
+         *   partner filter box
          */
 
         template: "MisReportWidgetTemplate",
@@ -43,16 +45,24 @@ odoo.define("mis_builder.widget", function (require) {
             self._super(field_manager, node);
             self.MisReportInstance = new Model("mis.report.instance");
             self.dfm = new FormCommon.DefaultFieldManager(self);
+            //
             self.analytic_account_id = undefined;
             self.analytic_account_id_domain = [];
             self.analytic_account_id_label = _t("Analytic Account Filter");
             self.analytic_account_id_m2o = undefined;
+            //
+            self.partner_id = undefined;
+            self.partner_id_domain = [];
+            self.partner_id_label = _t("Partner Filter");
+            self.partner_id_m2o = undefined;
+            //
             self.analytic_tag_ids = undefined;
             self.analytic_tag_ids_domain = [];
             self.analytic_tag_ids_label = _t("Analytic Tags Filter");
             self.analytic_tag_ids_m2m = undefined;
             self.has_group_analytic_accounting = false;
             self.hide_analytic_filters = false;
+            self.hide_partner_filter = false;
             self.filter_values = {};
             self.init_filter_from_context();
         },
@@ -118,12 +128,14 @@ odoo.define("mis_builder.widget", function (require) {
 
             var def_hide_analytic_filters = self.MisReportInstance.call(
                 "read",
-                [self._instance_id(), ["hide_analytic_filters"]],
+                [self._instance_id(), ["hide_analytic_filters", "hide_partner_filter"]],
                 {context: context}
             ).then(function (result) {
                 var record = result[0];
                 self.hide_analytic_filters = record.hide_analytic_filters;
+                self.hide_partner_filter = record.hide_partner_filter;
             });
+
 
             return $.when(
                 this._super.apply(this, arguments),
@@ -183,11 +195,13 @@ odoo.define("mis_builder.widget", function (require) {
 
         add_filters: function () {
             var self = this;
-            if (self.hide_analytic_filters) {
-                return;
+            if (!self.hide_analytic_filters) {
+                self.add_analytic_account_filter();
             }
-            self.add_analytic_account_filter();
-            self.add_analytic_tag_filter();
+            if (!self.hide_partner_filter) {
+                self.add_partner_filter();
+            }
+            //self.add_analytic_tag_filter();  --> CGT disabled
         },
 
         add_analytic_account_filter: function () {
@@ -223,6 +237,39 @@ odoo.define("mis_builder.widget", function (require) {
             });
             analytic_account_id_m2o.$follow_button.toggle();
             self.analytic_account_id_m2o = analytic_account_id_m2o;
+        },
+
+        add_partner_filter: function () {
+            var self = this;
+
+            if (self.partner_id_m2o) {
+                // Prevent errors with autocomplete
+                self.partner_id_m2o.destroy();
+            }
+            var field_name = "partner_id";
+            var dfm_object = {};
+            dfm_object[field_name] = {
+                relation: "res.partner",
+            };
+            self.dfm.extend_field_desc(dfm_object);
+            var partner_id_m2o = new FieldMany2One(self.dfm, {
+                attrs: {
+                    placeholder: self.partner_id_label,
+                    name: field_name,
+                    type: "many2one",
+                    domain: self.partner_id_domain,
+                    context: {},
+                    modifiers: "{}",
+                    options: '{"no_create": true, "no_open": true}',
+                },
+            });
+            self.init_filter_value(partner_id_m2o, field_name);
+            partner_id_m2o.appendTo(self.get_mis_builder_filter_box());
+            partner_id_m2o.$input.focusout(function () {
+                self.set_filter_value(partner_id_m2o, field_name);
+            });
+            partner_id_m2o.$follow_button.toggle();
+            self.partner_id_m2o = partner_id_m2o;
         },
 
         add_analytic_tag_filter: function () {

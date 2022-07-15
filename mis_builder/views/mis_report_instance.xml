@@ -184,9 +184,13 @@
                                     groups="analytic.group_analytic_accounting"
                                 />
                                 <field
+                                    name="partner_id"
+                                />
+                                <field
                                     name="analytic_tag_ids"
                                     groups="analytic.group_analytic_accounting"
                                     widget="many2many_tags"
+                                    invisible="1"
                                 />
                             </group>
                         </page>
@@ -196,6 +200,7 @@
                                 <field name="no_auto_expand_accounts" />
                                 <field name="display_columns_description" />
                                 <field name="hide_analytic_filters" />
+                                <field name="hide_partner_filter" />
                             </group>
                         </page>
                     </notebook>
@@ -400,7 +405,8 @@
                 </group>
                 <group string="Filters">
                     <field name="analytic_account_id" />
-                    <field name="analytic_tag_ids" widget="many2many_tags" />
+                    <field name="partner_id" />
+                    <field name="analytic_tag_ids" widget="many2many_tags" invisible="1" />
                 </group>
             </form>
         </field>

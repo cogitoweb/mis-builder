@@ -288,6 +288,15 @@ class MisReportInstancePeriod(models.Model):
             "and cannot be modified in the preview."
         ),
     )
+    partner_id = fields.Many2one(
+        comodel_name="res.partner",
+        string="Partner",
+        help=(
+            "Filter column on journal entries that match this partner."
+            "This filter is combined with a AND with the report-level filters "
+            "and cannot be modified in the preview."
+        ),
+    )
     analytic_tag_ids = fields.Many2many(
         comodel_name="account.analytic.tag",
         string="Analytic Tags",
@@ -407,6 +416,8 @@ class MisReportInstancePeriod(models.Model):
             domain.extend([("move_id.state", "=", "posted")])
         if self.analytic_account_id:
             domain.append(("analytic_account_id", "=", self.analytic_account_id.id))
+        if self.partner_id:
+            domain.append(("partner_id", "=", self.partner_id.id))
         for tag in self.analytic_tag_ids:
             domain.append(("analytic_tag_ids", "=", tag.id))
         return domain
@@ -575,10 +586,15 @@ class MisReportInstance(models.Model):
         string="Analytic Account",
         oldname="account_analytic_id",
     )
+    partner_id = fields.Many2one(
+        comodel_name="res.partner",
+        string="Partner",
+    )
     analytic_tag_ids = fields.Many2many(
         comodel_name="account.analytic.tag", string="Analytic Tags"
     )
     hide_analytic_filters = fields.Boolean(default=True)
+    hide_partner_filter = fields.Boolean(default=True)
 
     @api.onchange("company_id", "multi_company")
     def _onchange_company(self):
@@ -601,7 +617,9 @@ class MisReportInstance(models.Model):
     def get_filter_descriptions_from_context(self):
         filters = self.env.context.get("mis_report_filters", {})
         analytic_account_id = filters.get("analytic_account_id", {}).get("value")
+        partner_id = filters.get("partner_id", {}).get("value")
         filter_descriptions = []
+
         if analytic_account_id:
             analytic_account = self.env["account.analytic.account"].browse(
                 analytic_account_id
@@ -609,6 +627,16 @@ class MisReportInstance(models.Model):
             filter_descriptions.append(
                 _("Analytic Account: %s") % analytic_account.display_name
             )
+
+        if partner_id:
+            partner = self.env["res.partner"].browse(
+                partner_id
+            )
+            filter_descriptions.append(
+                _("Partner: %s") % partner.display_name
+            )
+
+
         analytic_tag_value = filters.get("analytic_tag_ids", {}).get("value")
         if analytic_tag_value:
             analytic_tag_names = self.resolve_2many_commands(
@@ -695,6 +723,11 @@ class MisReportInstance(models.Model):
         if self.analytic_account_id:
             context["mis_report_filters"]["analytic_account_id"] = {
                 "value": self.analytic_account_id.id,
+                "operator": "=",
+            }
+        if self.partner_id:
+            context["mis_report_filters"]["partner_id"] = {
+                "value": self.partner_id.id,
                 "operator": "=",
             }
         if self.analytic_tag_ids:
