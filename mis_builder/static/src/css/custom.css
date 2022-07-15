@@ -37,3 +37,7 @@
 .o_web_client .hidden_icon {
     display: none;
 }
+
+.oe_mis_builder_analytic_filter_box .o_form_field {
+    padding: 10px 0;
+}
