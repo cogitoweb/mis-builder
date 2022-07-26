@@ -42,6 +42,7 @@
 .oe_mis_builder_analytic_filter_box.o_form_view.oe_left,
 .oe_mis_builder_additional_filter_box.o_form_view.oe_left {
     max-width:280px !important;
+    display: block !important;
 }
 
 .o_web_client .mis_builder_amount:hover .hidden_icon {
