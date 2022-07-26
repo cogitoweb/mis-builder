@@ -35,6 +35,65 @@ class DateFilterForbidden(ValidationError):
     pass
 
 
+class MisReportInstanceFilter(models.Model):
+
+    _name = "mis.report.instance.filter"
+    _description = "MIS Report Instance Custom Filter"
+
+    @api.onchange('report_instance_id')
+    def _get_field_domain(self):
+
+        domain = [('ttype', '=', 'many2one')]
+
+        if not self.report_instance_id:
+            return domain
+
+        domain.append(
+            ('model_id', '=', self.report_instance_id.report_id.move_lines_source.id)
+        )
+
+        return {
+            "domain": {"field_id": domain}
+        }
+
+    # Fields
+
+    report_instance_id = fields.Many2one(
+        comodel_name="mis.report.instance",
+        string="Report instance",
+        ondelete="cascade",
+        required=True,
+    )
+    sequence = fields.Integer(
+        string="Sequence",
+        required=True,
+        default=10,
+    )
+    model_id = fields.Many2one(
+        comodel_name="ir.model",
+        string="Model",
+        ondelete="cascade",
+        required=True,
+    )
+    field_id = fields.Many2one(
+        comodel_name="ir.model.fields",
+        string="Field",
+        ondelete="cascade",
+        required=True,
+        domain=[('id', '=', 0)]
+    )
+
+    model_name = fields.Char(
+        related="model_id.model"
+    )
+    model_descr = fields.Char(
+        related="model_id.name"
+    )
+    field_name = fields.Char(
+        related="field_id.name"
+    )
+
+
 class MisReportInstancePeriodSum(models.Model):
 
     _name = "mis.report.instance.period.sum"
@@ -296,6 +355,27 @@ class MisReportInstancePeriod(models.Model):
             "filters and cannot be modified in the preview."
         ),
     )
+
+    partner_id = fields.Many2one(
+        comodel_name="res.partner",
+        string="Partner",
+        help=(
+            "Filter column on journal entries that match this partner."
+            "This filter is combined with a AND with the report-level filters "
+            "and cannot be modified in the preview."
+        ),
+    )
+
+    account_id = fields.Many2one(
+        comodel_name="account.account",
+        string="Account",
+        help=(
+            "Filter column on journal entries that match this account."
+            "This filter is combined with a AND with the report-level filters "
+            "and cannot be modified in the preview."
+        ),
+    )
+
     analytic_tag_ids = fields.Many2many(
         comodel_name="account.analytic.tag",
         string="Analytic Tags",
@@ -415,6 +495,10 @@ class MisReportInstancePeriod(models.Model):
             domain.extend([("move_id.state", "=", "posted")])
         if self.analytic_account_id:
             domain.append(("analytic_account_id", "=", self.analytic_account_id.id))
+        if self.partner_id:
+            domain.append(("partner_id", "=", self.partner_id.id))
+        if self.account_id:
+            domain.append(("account_id", "=", self.account_id.id))
         if self.analytic_group_id:
             domain.append(
                 ("analytic_account_id.group_id", "=", self.analytic_group_id.id)
@@ -591,10 +675,26 @@ class MisReportInstance(models.Model):
         comodel_name="account.analytic.group",
         string="Analytic Account Group",
     )
+    partner_id = fields.Many2one(
+        comodel_name="res.partner",
+        string="Partner",
+    )
+    account_id = fields.Many2one(
+        comodel_name="account.account",
+        string="Account",
+    )
     analytic_tag_ids = fields.Many2many(
         comodel_name="account.analytic.tag", string="Analytic Tags"
     )
-    hide_analytic_filters = fields.Boolean(default=True)
+    hide_analytic_filter = fields.Boolean(default=True)
+    hide_analytic_group_filter = fields.Boolean(default=True)
+    hide_partner_filter = fields.Boolean(default=True)
+    hide_account_filter = fields.Boolean(default=True)
+
+    additional_filter_ids = fields.One2many(
+        comodel_name="mis.report.instance.filter",
+        inverse_name="report_instance_id",
+    )
 
     @api.onchange("company_id", "multi_company")
     def _onchange_company(self):
@@ -616,14 +716,31 @@ class MisReportInstance(models.Model):
     @api.model
     def get_filter_descriptions_from_context(self):
         filters = self.env.context.get("mis_report_filters", {})
-        analytic_account_id = filters.get("analytic_account_id", {}).get("value")
         filter_descriptions = []
+
+        analytic_account_id = filters.get("analytic_account_id", {}).get("value")
         if analytic_account_id:
             analytic_account = self.env["account.analytic.account"].browse(
                 analytic_account_id
             )
             filter_descriptions.append(
                 _("Analytic Account: %s") % analytic_account.display_name
+            )
+        partner_id = filters.get("partner_id", {}).get("value")
+        if partner_id:
+            partner = self.env["res.partner"].browse(
+                partner_id
+            )
+            filter_descriptions.append(
+                _("Partner: %s") % partner.display_name
+            )
+        account_id = filters.get("account_id", {}).get("value")
+        if account_id:
+            account = self.env["account.account"].browse(
+                account_id
+            )
+            filter_descriptions.append(
+                _("Account: %s") % account.display_name
             )
         analytic_group_id = filters.get("analytic_account_id.group_id", {}).get("value")
         if analytic_group_id:
@@ -719,6 +836,16 @@ class MisReportInstance(models.Model):
         if self.analytic_account_id:
             context["mis_report_filters"]["analytic_account_id"] = {
                 "value": self.analytic_account_id.id,
+                "operator": "=",
+            }
+        if self.partner_id:
+            context["mis_report_filters"]["partner_id"] = {
+                "value": self.partner_id.id,
+                "operator": "=",
+            }
+        if self.account_id:
+            context["mis_report_filters"]["account_id"] = {
+                "value": self.account_id.id,
                 "operator": "=",
             }
         if self.analytic_group_id:
