@@ -27,7 +27,11 @@
 .oe_mis_builder_analytic_filter_box, .oe_mis_builder_additional_filter_box {
     padding: 10px 10px 10px 0;
     background: transparent;
-    width: 250px;
+    width: 260px;
+}
+
+.oe_mis_builder_buttons {
+    padding: 16px 10px 10px 0;
 }
 
 .oe_mis_builder_analytic_filter_box .o_field_widget,
@@ -35,7 +39,10 @@
     padding: 8px 0 0 14px; 
 }
 
-
+.oe_mis_builder_analytic_filter_box.o_form_view.oe_left,
+.oe_mis_builder_additional_filter_box.o_form_view.oe_left {
+    width:280px !important;
+}
 
 .o_web_client .mis_builder_amount:hover .hidden_icon {
     display: block;
