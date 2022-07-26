@@ -191,13 +191,32 @@
                             </group>
                         </page>
                         <page string="Layout">
-                            <group name="layout">
-                                <field name="landscape_pdf" />
-                                <field name="no_auto_expand_accounts" />
-                                <field name="display_columns_description" />
-                                <field name="hide_analytic_filters" />
-                                <field name="hide_partner_filter" />
-                                <field name="hide_account_filter" />
+                            <group name="layout_and_filters">
+                                
+                                <group name="layout">
+                                    <field name="landscape_pdf" />
+                                    <field name="no_auto_expand_accounts" />
+                                    <field name="display_columns_description" />
+                                </group>
+
+                                <group name="filters">
+                                    <field name="hide_analytic_filter" />
+                                    <field name="hide_analytic_group_filter" />
+                                    <field name="hide_partner_filter" />
+                                    <field name="hide_account_filter" />
+                                </group>
+
+                                <separator string="Additional filters" />
+
+                                <field name="additional_filter_ids">
+                                    <tree default_order="sequence asc" editable="bottom">
+                                        <field name="sequence" widget="handle" />
+                                        <field name="report_instance_id" invisible="1" />
+                                        <field name="model_id" options="{'no_create': True, 'no_open': True}" />
+                                        <field name="field_id" options="{'no_create': True, 'no_open': True}" />
+                                    </tree>
+                                </field>
+
                             </group>
                         </page>
                     </notebook>

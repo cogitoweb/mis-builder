@@ -8,7 +8,9 @@
                 <div>
                     <div
                         class="oe_mis_builder_analytic_filter_box oe_left o_form_view o_form_editable"
-                        style="position: relative; display: inline-block;"
+                    />
+                    <div
+                        class="oe_mis_builder_additional_filter_box oe_left o_form_view o_form_editable"
                     />
                     <div class="oe_mis_builder_buttons oe_right oe_button_box">
                         <button class="oe_mis_builder_refresh btn btn-sm oe_button">

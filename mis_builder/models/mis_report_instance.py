@@ -35,6 +35,65 @@ class DateFilterForbidden(ValidationError):
     pass
 
 
+class MisReportInstanceFilter(models.Model):
+
+    _name = "mis.report.instance.filter"
+    _description = "MIS Report Instance Custom Filter"
+
+    @api.onchange('report_instance_id')
+    def _get_field_domain(self):
+
+        domain = [('ttype', '=', 'many2one')]
+
+        if not self.report_instance_id:
+            return domain
+
+        domain.append(
+            ('model_id', '=', self.report_instance_id.report_id.move_lines_source.id)
+        )
+
+        return {
+            "domain": {"field_id": domain}
+        }
+
+    # Fields
+
+    report_instance_id = fields.Many2one(
+        comodel_name="mis.report.instance",
+        string="Report instance",
+        ondelete="cascade",
+        required=True,
+    )
+    sequence = fields.Integer(
+        string="Sequence",
+        required=True,
+        default=10,
+    )
+    model_id = fields.Many2one(
+        comodel_name="ir.model",
+        string="Model",
+        ondelete="cascade",
+        required=True,
+    )
+    field_id = fields.Many2one(
+        comodel_name="ir.model.fields",
+        string="Field",
+        ondelete="cascade",
+        required=True,
+        domain=[('id', '=', 0)]
+    )
+
+    model_name = fields.Char(
+        related="model_id.model"
+    )
+    model_descr = fields.Char(
+        related="model_id.name"
+    )
+    field_name = fields.Char(
+        related="field_id.name"
+    )
+
+
 class MisReportInstancePeriodSum(models.Model):
 
     _name = "mis.report.instance.period.sum"
@@ -627,9 +686,15 @@ class MisReportInstance(models.Model):
     analytic_tag_ids = fields.Many2many(
         comodel_name="account.analytic.tag", string="Analytic Tags"
     )
-    hide_analytic_filters = fields.Boolean(default=True)
+    hide_analytic_filter = fields.Boolean(default=True)
+    hide_analytic_group_filter = fields.Boolean(default=True)
     hide_partner_filter = fields.Boolean(default=True)
     hide_account_filter = fields.Boolean(default=True)
+
+    additional_filter_ids = fields.One2many(
+        comodel_name="mis.report.instance.filter",
+        inverse_name="report_instance_id",
+    )
 
     @api.onchange("company_id", "multi_company")
     def _onchange_company(self):
