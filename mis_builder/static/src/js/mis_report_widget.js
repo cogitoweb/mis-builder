@@ -166,9 +166,11 @@ odoo.define("mis_builder.widget", function (require) {
                 ._rpc({
                     model: "mis.report.instance.filter",
                     method: "search_read",
-                    args: [[['report_instance_id', '=', self._instanceId()]], [
-                        "model_name", "field_name", "model_descr"
-                    ]],
+                    fields: [
+                        "model_name", "field_name", "model_descr", "sequence", "custom_descr", "domain"
+                    ],
+                    domain: [['report_instance_id', '=', self._instanceId()]],
+                    sort: "sequence asc",
                     context: context,
                 })
                 .then(function (result) {
@@ -505,18 +507,26 @@ odoo.define("mis_builder.widget", function (require) {
             if (self.additional_filters.length < 1) {
                 return;
             }
+
+            var all_fields = {};
+            self.additional_m2o = [];
         
             for(var i=0; i<self.additional_filters.length; i++) {
 
-                var filter_name = "filter_" + self.additional_filters[i].field_name;
-                var model_descr = self.additional_filters[i].model_descr;
+                var current_item = self.additional_filters[i];
+                var tmp_field_name = "filter_" + current_item.field_name;
 
                 var fields = [{
-                    relation: self.additional_filters[i].model_name,
+                    relation: current_item.model_name,
+                    sequence: current_item.sequence,
+                    domain: current_item.domain,
                     type: "many2one",
-                    name: filter_name,
-                    value: self._getFilterValue(self.additional_filters[i].field_name),
+                    name: tmp_field_name,
+                    value: self._getFilterValue(current_item.field_name),
+                    descr: (current_item.custom_descr.trim() != "") ? current_item.custom_descr : current_item.model_descr,
                 }];
+
+                all_fields[tmp_field_name] = fields[0];
 
                 self.model
                     .makeRecord(
@@ -530,17 +540,21 @@ odoo.define("mis_builder.widget", function (require) {
                         $.when.apply($, defs).then(function () {
                             record = self.model.get(record.id);
 
+                            var field_name = Object.keys(record.data)[0];
+                            var field_refs = all_fields[field_name];
+
                             var additional_filter = new relational_fields.FieldMany2One(
                                 self,
-                                filter_name,
+                                field_refs.name,
                                 record,
                                 {
                                     mode: "edit",
                                     attrs: {
-                                        placeholder: model_descr,
+                                        placeholder: field_refs.descr,
                                         options: {
                                             no_create: "True",
                                             no_open: "True",
+                                            sequence: field_refs.sequence
                                         },
                                     },
                                 }
@@ -550,11 +564,22 @@ odoo.define("mis_builder.widget", function (require) {
                                 additional_filter.name,
                                 additional_filter
                             );
-                            additional_filter.appendTo(self.getMisBuilderAdditionalFilterBox());
 
                             self.additional_m2o.push(
                                 additional_filter
                             );
+
+                            if(self.additional_m2o.length == self.additional_filters.length) {
+
+                                self.additional_m2o.sort(function(a, b) {
+                                    var x = a.nodeOptions.sequence; var y = b.nodeOptions.sequence;
+                                    return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+                                });
+
+                                for(var k=0; k<self.additional_m2o.length; k++) {
+                                    self.additional_m2o[k].appendTo(self.getMisBuilderAdditionalFilterBox());
+                                }
+                            }
 
                         });
                     });

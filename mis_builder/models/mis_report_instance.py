@@ -39,6 +39,15 @@ class MisReportInstanceFilter(models.Model):
 
     _name = "mis.report.instance.filter"
     _description = "MIS Report Instance Custom Filter"
+    _order = 'sequence'
+
+    _sql_constraints = [
+        (
+            "report_instance_field_unique",
+            "unique(report_instance_id, field_id)",
+            "Field must be used once and only once for each report",
+        )
+    ]
 
     @api.onchange('report_instance_id')
     def _get_field_domain(self):
@@ -81,6 +90,13 @@ class MisReportInstanceFilter(models.Model):
         ondelete="cascade",
         required=True,
         domain=[('id', '=', 0)]
+    )
+
+    custom_descr = fields.Char(
+        help="Custom description"
+    )
+    domain = fields.Char(
+        help="Filter domain",
     )
 
     model_name = fields.Char(

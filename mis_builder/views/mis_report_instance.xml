@@ -212,8 +212,10 @@
                                     <tree default_order="sequence asc" editable="bottom">
                                         <field name="sequence" widget="handle" />
                                         <field name="report_instance_id" invisible="1" />
-                                        <field name="model_id" options="{'no_create': True, 'no_open': True}" />
                                         <field name="field_id" options="{'no_create': True, 'no_open': True}" />
+                                        <field name="model_id" options="{'no_create': True, 'no_open': True}" />
+                                        <field name="custom_descr" />
+                                        <field name="domain" />
                                     </tree>
                                 </field>
 
