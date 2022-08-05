@@ -523,7 +523,7 @@ odoo.define("mis_builder.widget", function (require) {
                     type: "many2one",
                     name: tmp_field_name,
                     value: self._getFilterValue(current_item.field_name),
-                    descr: (current_item.custom_descr.trim() != "") ? current_item.custom_descr : current_item.model_descr,
+                    descr: (current_item.custom_descr && current_item.custom_descr.trim() != "") ? current_item.custom_descr : current_item.model_descr,
                 }];
 
                 all_fields[tmp_field_name] = fields[0];
