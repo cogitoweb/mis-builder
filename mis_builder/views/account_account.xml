@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- form view -->
+        <record id="view_account_account_form_inherited" model="ir.ui.view">
+            <field name="name">view.account.account.form.inherited</field>
+            <field name="model">account.account</field>
+            <field name="inherit_id" ref="account.view_account_form" />
+            <field name="priority" eval="60" />
+            <field name="arch" type="xml">
+                <field name="deprecated" position="after">
+                    <field name="hide_code_in_mis_report" />
+                </field>    
+            </field>
+        </record>
+
+    </data>
+</odoo>

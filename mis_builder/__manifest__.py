@@ -19,6 +19,7 @@
     ],
     "data": [
         "wizard/mis_builder_dashboard.xml",
+        "views/account_account.xml",
         "views/mis_report.xml",
         "views/mis_report_instance.xml",
         "views/mis_report_style.xml",

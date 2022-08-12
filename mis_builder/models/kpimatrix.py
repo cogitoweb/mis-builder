@@ -570,7 +570,12 @@ class KpiMatrix(object):
         self._account_names = {a.id: self._get_account_name(a) for a in accounts}
 
     def _get_account_name(self, account):
-        result = "{} {}".format(account.code, account.name)
+
+        if account.hide_code_in_mis_report:
+            result = "{}".format(account.name)
+        else:
+            result = "{} {}".format(account.code, account.name)
+
         if self._multi_company:
             result = "{} [{}]".format(result, account.company_id.name)
         return result
