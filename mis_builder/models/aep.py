@@ -423,20 +423,20 @@ class AccountingExpressionProcessor(object):
             account_ids = self._account_ids_by_acc_domain[acc_domain]
             for rdi in rdi_ids_data:
                 account_ids_data = self._data[key][rdi]
-            for account_id in account_ids:
-                debit, credit = account_ids_data.get(
-                    account_id, (AccountingNone, AccountingNone)
-                )
-                if field == "bal":
-                    v += debit - credit
-                elif field == "pbal" and debit >= credit:
-                    v += debit - credit
-                elif field == "nbal" and debit < credit:
-                    v += debit - credit
-                elif field == "deb":
-                    v += debit
-                elif field == "crd":
-                    v += credit
+                for account_id in account_ids:
+                    debit, credit = account_ids_data.get(
+                        account_id, (AccountingNone, AccountingNone)
+                    )
+                    if field == "bal":
+                        v += debit - credit
+                    elif field == "pbal" and debit >= credit:
+                        v += debit - credit
+                    elif field == "nbal" and debit < credit:
+                        v += debit - credit
+                    elif field == "deb":
+                        v += debit
+                    elif field == "crd":
+                        v += credit
             # in initial balance mode, assume 0 is None
             # as it does not make sense to distinguish 0 from "no data"
             if (
