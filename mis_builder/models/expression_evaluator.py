@@ -27,7 +27,7 @@ class ExpressionEvaluator(object):
         self.aml_model = aml_model
         self._aep_queries_done = False
 
-    def aep_do_queries(self):
+    def aep_do_queries(self, auto_expand_col_name=None):
         if self.aep and not self._aep_queries_done:
             self.aep.do_queries(
                 self.date_from,
@@ -35,6 +35,7 @@ class ExpressionEvaluator(object):
                 self.target_move,
                 self.additional_move_line_filter,
                 self.aml_model,
+                auto_expand_col_name,
             )
             self._aep_queries_done = True
 
@@ -62,7 +63,7 @@ class ExpressionEvaluator(object):
         if not self.aep:
             return
         exprs = [e and e.name or "AccountingNone" for e in expressions]
-        for account_id, replaced_exprs in self.aep.replace_exprs_by_account_id(exprs):
+        for account_id, replaced_exprs in self.aep.replace_exprs_by_row_detail(exprs):
             vals = []
             drilldown_args = []
             name_error = False

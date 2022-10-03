@@ -150,7 +150,7 @@ class TestMultiCompanyAEP(common.TransactionCase):
     def _eval_by_account_id(self, aep, expr):
         res = {}
         eval_dict = {"AccountingNone": AccountingNone}
-        for account_id, replaced_exprs in aep.replace_exprs_by_account_id([expr]):
+        for account_id, replaced_exprs in aep.replace_exprs_by_row_detail([expr]):
             res[account_id] = safe_eval(replaced_exprs[0], eval_dict)
         return res
 
