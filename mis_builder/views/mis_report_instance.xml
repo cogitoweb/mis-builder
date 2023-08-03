@@ -39,7 +39,6 @@
                     string="Export"
                     icon="fa-download"
                 />
-                <field name="sequence" widget="handle" />
                 <field name="name" />
                 <field name="report_id" string="Template" />
                 <field name="company_id" groups="base.group_multi_company" />
