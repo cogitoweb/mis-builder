@@ -713,6 +713,8 @@ class MisReportInstance(models.Model):
         copy=True
     )
 
+    active = fields.Boolean(default=True)
+
     @api.onchange("company_id", "multi_company")
     def _onchange_company(self):
         if self.company_id and self.multi_company:
