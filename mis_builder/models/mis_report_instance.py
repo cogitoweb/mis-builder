@@ -710,6 +710,7 @@ class MisReportInstance(models.Model):
     additional_filter_ids = fields.One2many(
         comodel_name="mis.report.instance.filter",
         inverse_name="report_instance_id",
+        copy=True
     )
 
     @api.onchange("company_id", "multi_company")
