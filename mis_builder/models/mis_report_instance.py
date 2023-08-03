@@ -73,6 +73,11 @@ class MisReportInstanceFilter(models.Model):
         ondelete="cascade",
         required=True,
     )
+    sequence = fields.Integer(
+        string="Sequence",
+        required=True,
+        default=10,
+    )
     model_id = fields.Many2one(
         comodel_name="ir.model",
         string="Model",
