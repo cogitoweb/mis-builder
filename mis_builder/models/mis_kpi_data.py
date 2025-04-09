@@ -63,7 +63,7 @@ class MisKpiData(models.AbstractModel):
                 subkpi_name = "." + subkpi_name
             else:
                 subkpi_name = ""
-            rec.name = u"{}{}: {} - {}".format(
+            rec.name = "{}{}: {} - {}".format(
                 rec.kpi_expression_id.kpi_id.name,
                 subkpi_name,
                 rec.date_from,
@@ -106,7 +106,7 @@ class MisKpiData(models.AbstractModel):
                     % (item.kpi_expression_id.kpi_id.accumulation_method, item.name)
                 )
         # compute weighted average for ACC_AVG
-        for kpi_expression, amounts in res_avg.items():
+        for kpi_expression, amounts in list(res_avg.items()):
             res[kpi_expression] = sum(d * a for d, a in amounts) / sum(
                 d for d, a in amounts
             )

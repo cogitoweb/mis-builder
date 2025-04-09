@@ -40,7 +40,7 @@ class SubKPIUnknownTypeError(UserError):
 
 class AutoStruct(object):
     def __init__(self, **kwargs):
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             setattr(self, k, v)
 
 
@@ -152,7 +152,7 @@ class MisReportKpi(models.Model):
     def name_get(self):
         res = []
         for rec in self:
-            name = u"{} ({})".format(rec.description, rec.name)
+            name = "{} ({})".format(rec.description, rec.name)
             res.append((rec.id, name))
         return res
 
@@ -179,7 +179,7 @@ class MisReportKpi(models.Model):
             for expression in kpi.expression_ids:
                 if expression.subkpi_id:
                     exprs.append(
-                        u"{}\xa0=\xa0{}".format(
+                        "{}\xa0=\xa0{}".format(
                             expression.subkpi_id.name, expression.name
                         )
                     )
@@ -316,7 +316,7 @@ class MisReportKpiExpression(models.Model):
             kpi = rec.kpi_id
             subkpi = rec.subkpi_id
             if subkpi:
-                name = u"{} / {} ({}.{})".format(
+                name = "{} / {} ({}.{})".format(
                     kpi.description, subkpi.description, kpi.name, subkpi.name
                 )
             else:

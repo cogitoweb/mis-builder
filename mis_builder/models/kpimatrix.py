@@ -101,7 +101,7 @@ class KpiMatrixCol(object):
         return self._subcols
 
     def iter_cell_tuples(self):
-        return self._cell_tuples_by_row.values()
+        return list(self._cell_tuples_by_row.values())
 
     def get_cell_tuple_for_row(self, row):
         return self._cell_tuples_by_row.get(row)
@@ -262,13 +262,13 @@ class KpiMatrix(object):
                     self.lang, row.style_props, kpi.type, val
                 )
                 if row.kpi.multi and subcol.subkpi:
-                    val_comment = u"{}.{} = {}".format(
+                    val_comment = "{}.{} = {}".format(
                         row.kpi.name,
                         subcol.subkpi.name,
                         row.kpi._get_expression_str_for_subkpi(subcol.subkpi),
                     )
                 else:
-                    val_comment = u"{} = {}".format(row.kpi.name, row.kpi.expression)
+                    val_comment = "{} = {}".format(row.kpi.name, row.kpi.expression)
             cell_style_props = row.style_props
             if row.kpi.style_expression:
                 # evaluate style expression
@@ -321,12 +321,12 @@ class KpiMatrix(object):
         for (
             cmpcol_key,
             (base_col_key, label, description),
-        ) in self._row_comparison_todo.items():
+        ) in list(self._row_comparison_todo.items()):
             base_col = self._cols[base_col_key]
             common_subkpis = self._common_subkpis([base_col])
 
             if not label:
-                label = u"ratio {}".format(base_col.label)
+                label = "ratio {}".format(base_col.label)
             comparison_col = KpiMatrixCol(
                 cmpcol_key,
                 label,
@@ -404,7 +404,7 @@ class KpiMatrix(object):
         for (
             cmpcol_key,
             (col_key, base_col_key, label, description),
-        ) in self._comparison_todo.items():
+        ) in list(self._comparison_todo.items()):
             col = self._cols[col_key]
             base_col = self._cols[base_col_key]
             common_subkpis = self._common_subkpis([col, base_col])
@@ -415,7 +415,7 @@ class KpiMatrix(object):
                     )
                 )
             if not label:
-                label = u"{} vs {}".format(col.label, base_col.label)
+                label = "{} vs {}".format(col.label, base_col.label)
             comparison_col = KpiMatrixCol(
                 cmpcol_key,
                 label,
@@ -483,7 +483,7 @@ class KpiMatrix(object):
         for (
             sumcol_key,
             (col_to_sum_keys, label, description, sum_accdet),
-        ) in self._sum_todo.items():
+        ) in list(self._sum_todo.items()):
             sumcols = [self._cols[k] for (sign, k) in col_to_sum_keys]
             # TODO check all sumcols are resolved; we need a kind of
             #      recompute queue here so we don't depend on insertion
@@ -539,9 +539,9 @@ class KpiMatrix(object):
 
         yields KpiMatrixRow.
         """
-        for kpi_row in self._kpi_rows.values():
+        for kpi_row in list(self._kpi_rows.values()):
             yield kpi_row
-            detail_rows = self._detail_rows[kpi_row.kpi].values()
+            detail_rows = list(self._detail_rows[kpi_row.kpi].values())
             detail_rows = sorted(detail_rows, key=lambda r: r.label)
             for detail_row in detail_rows:
                 yield detail_row
@@ -551,7 +551,7 @@ class KpiMatrix(object):
 
         yields KpiMatrixCol: one for each column or comparison.
         """
-        for _col_key, col in self._cols.items():
+        for _col_key, col in list(self._cols.items()):
             yield col
 
     def iter_subcols(self):
@@ -566,15 +566,15 @@ class KpiMatrix(object):
 
     def _load_account_names(self):
         account_ids = set()
-        for detail_rows in self._detail_rows.values():
-            account_ids.update(detail_rows.keys())
+        for detail_rows in list(self._detail_rows.values()):
+            account_ids.update(list(detail_rows.keys()))
         accounts = self._account_model.search([("id", "in", list(account_ids))])
         self._account_names = {a.id: self._get_account_name(a) for a in accounts}
 
     def _get_account_name(self, account):
-        result = u"{} {}".format(account.code, account.name)
+        result = "{} {}".format(account.code, account.name)
         if self._multi_company:
-            result = u"{} [{}]".format(result, account.company_id.name)
+            result = "{} [{}]".format(result, account.company_id.name)
         return result
 
     def get_account_name(self, account_id):

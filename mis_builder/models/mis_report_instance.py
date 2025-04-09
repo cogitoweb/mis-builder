@@ -374,7 +374,7 @@ class MisReportInstancePeriod(models.Model):
     def _get_filter_domain_from_context(self):
         filters = []
         mis_report_filters = self.env.context.get("mis_report_filters", {})
-        for filter_name, domain in mis_report_filters.items():
+        for filter_name, domain in list(mis_report_filters.items()):
             if domain:
                 value = domain.get("value")
                 operator = domain.get("operator", "=")
