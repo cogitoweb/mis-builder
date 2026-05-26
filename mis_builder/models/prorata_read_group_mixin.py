@@ -47,6 +47,14 @@ class ProRataReadGroupMixin(models.AbstractModel):
         a time period (date >= from and date <= to, or
         date_from <= to and date_to >= from), adjust the accumulated
         values pro-rata temporis.
+
+        Aggregation is performed in a single SQL statement:
+            SUM(field * overlap_days / NULLIF(item_days, 0))
+        with
+            overlap_days = LEAST(date_to, period_to) - GREATEST(date_from, period_from) + 1
+            item_days    = date_to - date_from + 1
+        Advanced cases (offset, limit, orderby, lazy groupby, ``field:granularity``
+        in ``fields``) fall back to the parent ``read_group`` (no prorata).
         """
         date_from = None
         date_to = None
@@ -62,36 +70,109 @@ class ProRataReadGroupMixin(models.AbstractModel):
                     date_to = value
                 elif field == "date_from" and op == "<=":
                     date_to = value
+
         if (
-            date_from is not None
-            and date_to is not None
-            and not any(":" in f for f in fields)
+            date_from is None
+            or date_to is None
+            or any(":" in f for f in fields)
+            or offset
+            or limit
+            or orderby
+            or lazy
         ):
-            dt_from = Date.from_string(date_from)
-            dt_to = Date.from_string(date_to)
-            res = {}
-            sum_fields = set(fields) - set(groupby)
-            read_fields = set(fields + ["date_from", "date_to"])
-            for item in self.search(domain).read(read_fields):
-                key = tuple(item[k] for k in groupby)
-                if key not in res:
-                    res[key] = {k: item[k] for k in groupby}
-                    res[key].update({k: 0.0 for k in sum_fields})
-                res_item = res[key]
-                for sum_field in sum_fields:
-                    item_dt_from = Date.from_string(item["date_from"])
-                    item_dt_to = Date.from_string(item["date_to"])
-                    i_days, item_days = self._intersect_days(
-                        item_dt_from, item_dt_to, dt_from, dt_to
-                    )
-                    res_item[sum_field] += item[sum_field] * i_days / item_days
-            return list(res.values())
-        return super(ProRataReadGroupMixin, self).read_group(
-            domain,
-            fields,
-            groupby,
-            offset=offset,
-            limit=limit,
-            orderby=orderby,
-            lazy=lazy,
+            return super(ProRataReadGroupMixin, self).read_group(
+                domain,
+                fields,
+                groupby,
+                offset=offset,
+                limit=limit,
+                orderby=orderby,
+                lazy=lazy,
+            )
+
+        # Normalise groupby to a list (Odoo accepts a string or a list)
+        if isinstance(groupby, str):
+            groupby_list = [groupby]
+        else:
+            groupby_list = list(groupby)
+        sum_fields = [f for f in fields if f not in groupby_list]
+        if not sum_fields:
+            return super(ProRataReadGroupMixin, self).read_group(
+                domain,
+                fields,
+                groupby,
+                offset=offset,
+                limit=limit,
+                orderby=orderby,
+                lazy=lazy,
+            )
+
+        query = self._where_calc(domain)
+        self._apply_ir_rules(query, "read")
+        from_clause, where_clause, where_params = query.get_sql()
+
+        table = self._table
+
+        select_parts = []
+        for g in groupby_list:
+            select_parts.append('"%s"."%s" AS "%s"' % (table, g, g))
+        for f in sum_fields:
+            select_parts.append(
+                ('COALESCE(SUM("%(t)s"."%(f)s"::numeric * '
+                 'GREATEST(0, LEAST("%(t)s"."date_to", %%s::date) - '
+                 'GREATEST("%(t)s"."date_from", %%s::date) + 1) / '
+                 'NULLIF(("%(t)s"."date_to" - "%(t)s"."date_from" + 1), 0)'
+                 '), 0) AS "%(f)s"')
+                % {"t": table, "f": f}
+            )
+        groupby_clause = ", ".join(
+            '"%s"."%s"' % (table, g) for g in groupby_list
         )
+
+        sql = 'SELECT %s FROM %s WHERE %s GROUP BY %s' % (
+            ", ".join(select_parts),
+            from_clause,
+            where_clause or 'TRUE',
+            groupby_clause,
+        )
+
+        # Each prorata SUM expression has 2 placeholders: date_to, date_from
+        params = []
+        for _f in sum_fields:
+            params.extend([date_to, date_from])
+        params.extend(where_params)
+
+        self._cr.execute(sql, params)
+        rows = self._cr.dictfetchall()
+
+        # For M2O groupby fields vanilla read_group returns (id, display_name).
+        field_objs = {g: self._fields.get(g) for g in groupby_list}
+        m2o_groupby = [
+            g for g, fobj in field_objs.items()
+            if fobj is not None and fobj.type == 'many2one'
+        ]
+        if m2o_groupby:
+            ids_by_field = {g: set() for g in m2o_groupby}
+            for row in rows:
+                for g in m2o_groupby:
+                    if row[g]:
+                        ids_by_field[g].add(row[g])
+            names_by_field = {}
+            for g, ids in ids_by_field.items():
+                comodel_name = field_objs[g].comodel_name
+                names_by_field[g] = dict(
+                    self.env[comodel_name].browse(list(ids)).name_get()
+                )
+            for row in rows:
+                for g in m2o_groupby:
+                    rid = row[g]
+                    if rid:
+                        row[g] = (rid, names_by_field[g].get(rid, ''))
+
+        # psycopg2 returns Decimal for numeric sums; consumers expect float.
+        for row in rows:
+            for f in sum_fields:
+                if row[f] is not None:
+                    row[f] = float(row[f])
+
+        return rows
