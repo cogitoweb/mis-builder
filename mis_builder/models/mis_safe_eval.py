@@ -24,8 +24,12 @@ def mis_safe_eval(expr, locals_dict):
         globals_dict = {"__builtins__": _BUILTINS}
         # pylint: disable=eval-used,eval-referenced
         val = eval(c, globals_dict, locals_dict)
-    except NameError:
-        val = NameDataError("#NAME", traceback.format_exc())
+    except NameError as e:
+        # No traceback.format_exc() here: since Python 3.10 it computes the
+        # "Did you mean" suggestion with a Levenshtein scan over every name
+        # in locals_dict (~18ms with ~150 KPIs), and NameErrors are routine
+        # (forward references between KPIs are re-queued and recomputed).
+        val = NameDataError("#NAME", "NameError: %s" % e)
     except ZeroDivisionError:
         # pylint: disable=redefined-variable-type
         val = DataError("#DIV/0", traceback.format_exc())
